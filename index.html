@@ -12,7 +12,8 @@ button{padding:12px 20px;margin:6px;border-radius:10px;border:none;font-size:16p
 button:hover{opacity:0.85}
 #hud{display:flex;justify-content:space-between;margin-bottom:10px}
 #timer,#score{font-weight:bold}
-input{padding:10px;font-size:18px;text-align:center;border-radius:8px;border:none;width:200px}
+input{padding:10px;font-size:18px;text-align:center;border-radius:8px;border:none;width:240px;letter-spacing:6px}
+#codigo{font-size:26px;letter-spacing:10px;margin:10px 0}
 </style>
 </head>
 
@@ -27,6 +28,7 @@ let fase=0;
 let score=0;
 let tempo=0;
 let cron;
+let codigo="";
 
 const fases=[
 {img:'cenarios/lab.png',titulo:'Laboratório do Crime',texto:'O cérebro foi sabotado. Encontre a primeira pista!',pergunta:'O sulco central separa anatomicamente:',op:['A) Lobo frontal e temporal','B) Lobo parietal e occipital','C) Giro pré-central e pós-central','D) Tálamo e hipotálamo','E) Ponte e bulbo'],resp:2},
@@ -42,10 +44,7 @@ const fases=[
 {img:'cenarios/ventriculo3.png',titulo:'Terceiro Ventrículo',texto:'Última pista antes do cofre!',pergunta:'O forame interventricular comunica:',op:['A) 3º e 4º','B) Laterais e 3º','C) 4º e espaço subaracnoide','D) Aqueduto e 4º','E) Plexos coroides'],resp:1}
 ];
 
-function startTimer(){
-cron=setInterval(()=>{tempo++;updateHUD();},1000)
-}
-
+function startTimer(){cron=setInterval(()=>{tempo++;updateHUD();},1000)}
 function stopTimer(){clearInterval(cron)}
 
 function updateHUD(){
@@ -55,12 +54,18 @@ hud=document.createElement('div');
 hud.id='hud';
 document.getElementById('game').prepend(hud);
 }
-hud.innerHTML=`<div id='score'>Pontuação: ${score}</div><div id='timer'>Tempo: ${tempo}s</div>`;
+hud.innerHTML=`<div id='score'>💰 ${score}</div>
+<div id='codigo'>🔐 ${codigo.padEnd(11,'_')}</div>
+<div id='timer'>⏱ ${tempo}s</div>`;
 }
 
 function render(){
 const f=fases[fase];
-let html=`<div class='card'><h1>${f.titulo}</h1><img src='${f.img}'><p>${f.texto}</p><h3>${f.pergunta}</h3>`;
+let html=`<div class='card'>
+<h1>${f.titulo}</h1>
+<img src='${f.img}'>
+<p>${f.texto}</p>
+<h3>${f.pergunta}</h3>`;
 f.op.forEach((o,i)=>{
 html+=`<button onclick='responder(${i})'>${o}</button>`;
 });
@@ -73,6 +78,7 @@ function responder(i){
 if(i===fases[fase].resp){
 document.getElementById('acerto').play();
 score+=10;
+codigo+=i;
 fase++;
 if(fase<fases.length){setTimeout(render,600)} else cadeado();
 }else{
@@ -83,17 +89,29 @@ alert('Resposta incorreta. Tente novamente!');
 
 function cadeado(){
 stopTimer();
-document.getElementById('game').innerHTML=`<div class='card'><h1>COFRE FINAL 🔐</h1><p>Digite o código secreto formado pelas respostas corretas:</p><input id='code'><br><br><button onclick='verificar()'>Abrir Cofre</button></div>`;
+document.getElementById('game').innerHTML=`<div class='card'>
+<h1>COFRE FINAL 🔐</h1>
+<p>Código descoberto:</p>
+<div id='codigo'>${codigo}</div>
+<p>Digite para confirmar:</p>
+<input id='code'><br><br>
+<button onclick='verificar()'>Abrir Cofre</button>
+</div>`;
 }
 
 function verificar(){
 let code=document.getElementById('code').value;
-if(code==='23231212321') final();
+if(code===codigo) final();
 else alert('Código incorreto!');
 }
 
 function final(){
-document.getElementById('game').innerHTML=`<div class='card'><h1>CASO RESOLVIDO! 🏆</h1><img src='cenarios/final.png'><p>Parabéns, detetive! Você concluiu com ${score} pontos em ${tempo} segundos!</p><button onclick='location.reload()'>Jogar novamente</button></div>`;
+document.getElementById('game').innerHTML=`<div class='card'>
+<h1>CASO RESOLVIDO! 🏆</h1>
+<img src='cenarios/final.png'>
+<p>Parabéns, detetive! Você concluiu com ${score} pontos em ${tempo} segundos!</p>
+<button onclick='location.reload()'>Jogar novamente</button>
+</div>`;
 }
 
 startTimer();
@@ -101,3 +119,5 @@ render();
 </script>
 </body>
 </html>
+
+
