@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Detetive Neuro — Escape Room 3.0</title>
+<style>
+body{margin:0;font-family:Arial;background:#050b1a;color:white;text-align:center}
+#game{max-width:900px;margin:auto;padding:20px}
+img{max-width:100%;border-radius:12px}
+.card{background:rgba(0,0,0,.75);padding:20px;border-radius:14px;box-shadow:0 0 20px #00bfff}
+button{padding:12px 20px;margin:6px;border-radius:10px;border:none;font-size:16px;cursor:pointer;background:#00bfff;color:black}
+button:hover{opacity:0.85}
+#hud{display:flex;justify-content:space-between;margin-bottom:10px}
+#timer,#score{font-weight:bold}
+input{padding:10px;font-size:18px;text-align:center;border-radius:8px;border:none;width:200px}
+</style>
+</head>
+
+<body>
+<div id="game"></div>
+
+<audio id="acerto" src="sons/acerto.mp3"></audio>
+<audio id="erro" src="sons/erro.mp3"></audio>
+
+<script>
+let fase=0;
+let score=0;
+let tempo=0;
+let cron;
+
+const fases=[
+{img:'cenarios/lab.png',titulo:'Laboratório do Crime',texto:'O cérebro foi sabotado. Encontre a primeira pista!',pergunta:'O sulco central separa anatomicamente:',op:['A) Lobo frontal e temporal','B) Lobo parietal e occipital','C) Giro pré-central e pós-central','D) Tálamo e hipotálamo','E) Ponte e bulbo'],resp:2},
+{img:'cenarios/hemisferios.png',titulo:'Sala dos Hemisférios',texto:'Quem conecta os dois lados do cérebro?',pergunta:'O corpo caloso conecta diretamente:',op:['A) Hemisférios cerebelares','B) Diencéfalo e telencéfalo','C) Hemisférios cerebrais direito e esquerdo','D) Mesencéfalo e ponte','E) Córtex e medula'],resp:2},
+{img:'cenarios/ventriculos.png',titulo:'Sala dos Ventrículos',texto:'Onde nasce o líquido protetor do cérebro?',pergunta:'O líquido cerebrospinal é produzido principalmente:',op:['A) Aqueduto cerebral','B) Espaço subaracnoide','C) Plexos coroides','D) Seios venosos','E) 4º ventrículo'],resp:2},
+{img:'cenarios/vasos.png',titulo:'Sala dos Vasos',texto:'Uma artéria vital foi atingida!',pergunta:'A artéria cerebral média é ramo direto da:',op:['A) Basilar','B) Vertebral','C) Comunicante posterior','D) Carótida interna','E) Cerebral anterior'],resp:3},
+{img:'cenarios/cerebelo.png',titulo:'Câmara do Equilíbrio',texto:'Descubra a ligação principal do cerebelo.',pergunta:'O pedúnculo cerebelar superior conecta o cerebelo ao:',op:['A) Bulbo','B) Ponte','C) Mesencéfalo','D) Tálamo','E) Diencéfalo'],resp:2},
+{img:'cenarios/tronco.png',titulo:'Tronco Encefálico',texto:'Encontre o limite entre ponte e bulbo.',pergunta:'O limite anatômico entre ponte e bulbo é:',op:['A) Sulco basilar','B) Sulco bulbopontino','C) Sulco limitante','D) Colículo facial','E) Óbex'],resp:1},
+{img:'cenarios/memoria.png',titulo:'Sala da Memória',texto:'A memória guarda um feixe essencial.',pergunta:'O fórnix conecta:',op:['A) Tálamo e córtex frontal','B) Hipocampo e corpos mamilares','C) Corpo caloso e cerebelo','D) Amígdala e hipotálamo','E) Putâmen e globo pálido'],resp:1},
+{img:'cenarios/decussacao.png',titulo:'Decussação',texto:'Onde ocorre o cruzamento das pirâmides?',pergunta:'A decussação das pirâmides localiza-se no:',op:['A) Mesencéfalo','B) Ponte','C) Bulbo caudal','D) Tálamo','E) Medula cervical'],resp:2},
+{img:'cenarios/emocao.png',titulo:'Sala da Emoção',texto:'Área ligada à emoção e memória.',pergunta:'O giro parahipocampal pertence ao:',op:['A) Frontal','B) Parietal','C) Occipital','D) Temporal','E) Ínsula'],resp:3},
+{img:'cenarios/medula.png',titulo:'Sala da Medula',texto:'Investigando os feixes sensitivos.',pergunta:'O funículo posterior contém:',op:['A) Espinotalâmicos','B) Corticoespinais','C) Grácil e cuneiforme','D) Espinocerebelares','E) Reticuloespinais'],resp:2},
+{img:'cenarios/ventriculo3.png',titulo:'Terceiro Ventrículo',texto:'Última pista antes do cofre!',pergunta:'O forame interventricular comunica:',op:['A) 3º e 4º','B) Laterais e 3º','C) 4º e espaço subaracnoide','D) Aqueduto e 4º','E) Plexos coroides'],resp:1}
+];
+
+function startTimer(){
+cron=setInterval(()=>{tempo++;updateHUD();},1000)
+}
+
+function stopTimer(){clearInterval(cron)}
+
+function updateHUD(){
+let hud=document.getElementById('hud');
+if(!hud){
+hud=document.createElement('div');
+hud.id='hud';
+document.getElementById('game').prepend(hud);
+}
+hud.innerHTML=`<div id='score'>Pontuação: ${score}</div><div id='timer'>Tempo: ${tempo}s</div>`;
+}
+
+function render(){
+const f=fases[fase];
+let html=`<div class='card'><h1>${f.titulo}</h1><img src='${f.img}'><p>${f.texto}</p><h3>${f.pergunta}</h3>`;
+f.op.forEach((o,i)=>{
+html+=`<button onclick='responder(${i})'>${o}</button>`;
+});
+html+='</div>';
+document.getElementById('game').innerHTML=html;
+updateHUD();
+}
+
+function responder(i){
+if(i===fases[fase].resp){
+document.getElementById('acerto').play();
+score+=10;
+fase++;
+if(fase<fases.length){setTimeout(render,600)} else cadeado();
+}else{
+document.getElementById('erro').play();
+alert('Resposta incorreta. Tente novamente!');
+}
+}
+
+function cadeado(){
+stopTimer();
+document.getElementById('game').innerHTML=`<div class='card'><h1>COFRE FINAL 🔐</h1><p>Digite o código secreto formado pelas respostas corretas:</p><input id='code'><br><br><button onclick='verificar()'>Abrir Cofre</button></div>`;
+}
+
+function verificar(){
+let code=document.getElementById('code').value;
+if(code==='23231212321') final();
+else alert('Código incorreto!');
+}
+
+function final(){
+document.getElementById('game').innerHTML=`<div class='card'><h1>CASO RESOLVIDO! 🏆</h1><img src='cenarios/final.png'><p>Parabéns, detetive! Você concluiu com ${score} pontos em ${tempo} segundos!</p><button onclick='location.reload()'>Jogar novamente</button></div>`;
+}
+
+startTimer();
+render();
+</script>
+</body>
+</html>
